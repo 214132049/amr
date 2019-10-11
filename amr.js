@@ -27126,5 +27126,3 @@ var AMR = (function () {
 
     return AMR;
 })();
-
-export default AMR;
