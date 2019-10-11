@@ -1,5 +1,23 @@
 var AMR = (function () {
     var AMR = {
+        blobToWavUrl: (function(blob) {
+            return this.readBlob(blob).then(data => {
+                var buffer = this.toWAV(data);
+                if (!buffer) {
+                    return console.error('文件解析失败')
+                }
+                return URL.createObjectURL(new Blob([buffer], {type: 'audio/x-wav'}))
+            })
+        }),
+        readBlob: (function (blob) {
+            return new Promise((reslove, reject) => {
+                let reader = new FileReader();
+                reader.onload = function (e) {
+                    reslove(new Uint8Array(e.target.result))
+                };
+                reader.readAsArrayBuffer(blob)
+            }) 
+        }),
         toWAV: (function (amr) {
             var decoded = this._decode(amr);
             if (!decoded) {
@@ -27104,54 +27122,9 @@ var AMR = (function () {
         shouldRunNow = false
     }
     Module["noExitRuntime"] = true;
-    run()
-
-
-    var audios = [];
-
-    function readBlob(blob, callback) {
-        var reader = new FileReader();
-        reader.onload = function (e) {
-            var data = new Uint8Array(e.target.result);
-            callback(data)
-        };
-        reader.readAsArrayBuffer(blob)
-    };
-
-    function convertAmrBlobToWav(blob) {
-        readBlob(blob, function (data) {
-            if (audios.length !== 0) {
-                audios.forEach(function (audio) {
-                    audio.load()
-                })
-            }
-            var buffer = AMR.toWAV(data);
-            var url = URL.createObjectURL(new Blob([buffer], {
-                type: 'audio/x-wav'
-            }));
-            var audio = new Audio(url);
-            audio.onloadedmetadata = audio.onerror = function () {
-                URL.revokeObjectURL(url)
-            };
-            audios.push(audio);
-            audio.play();
-            audio.onended = function () {
-                audios = []
-            }
-        })
-    };
-    AMR.fetchBlob = function (url) {
-        var xhr = new XMLHttpRequest();
-        xhr.open('GET', url);
-        xhr.responseType = 'blob';
-        xhr.onload = function () {
-            convertAmrBlobToWav(this.response)
-        };
-        xhr.onerror = function () {
-            alert('Failed to fetch ' + url)
-        };
-        xhr.send()
-    };
+    run();
 
     return AMR;
 })();
+
+export default AMR;
